@@ -5,7 +5,8 @@
 	"keywords": [
 		"state-management"
 	],
-	"main": "dist/restore-js.umd.js",
+	"main": "./dist/restore-js.umd.js",
+  "types": "./dist/index.d.js",
 	"homepage": "https://github.com/yunusemrejs/restore-js#readme",
 	"bugs": {
 		"url": "https://github.com/yunusemrejs/restore-js/issues"
@@ -21,9 +22,7 @@
 		"url": "https://github.com/yunusemrejs/restore-js"
 	},
 	"private": false,
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"exports": {
 		".": {
 			"import": "./dist/restore-js.es.js",
