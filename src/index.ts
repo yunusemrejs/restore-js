@@ -1,44 +1,48 @@
 /* eslint-disable @typescript-eslint/ban-types */
-interface StoreOptions<State extends Record<string, any>> {
+interface StoreOptions {
   state: State;
-  actions?: Actions<State>;
-  mutations?: Mutations<State>;
-  middlewares?: Middleware<State>[];
+  actions?: Actions;
+  mutations?: Mutations;
+  middlewares?: Middleware[];
 }
 
-interface Actions<State extends Record<string, any>> {
-  [key: string]: (store: ReStore<State>, payload?: any) => any;
+interface State {
+  [key: string]: any;
 }
 
-interface Mutations<State extends Record<string, any>> {
+interface Actions {
+  [key: string]: (store: ReStore, payload?: any) => any;
+}
+
+interface Mutations {
   [key: string]: (state: State, payload?: any) => void;
 }
 
-interface Middleware<State extends Record<string, any>> {
-  (context: MiddlewareContext<State>): (next: Function) => any;
+interface Middleware {
+  (context: MiddlewareContext): (next: Function) => any;
 }
 
-interface MiddlewareContext<State extends Record<string, any>> {
-  store: ReStore<State>;
+interface MiddlewareContext {
+  store: ReStore;
   actionName: string;
   payload?: any;
 }
 
-interface Listener<State extends Record<string, any>> {
+interface Listener {
   watchedStates: (keyof State)[];
   callback: (state: State) => void;
 }
 
-class ReStore<State extends Record<string, any>> {
+class ReStore {
   private state: State;
-  private actions: Actions<State>;
-  private mutations: Mutations<State>;
-  private middlewares: Middleware<State>[];
-  private listeners: Listener<State>[];
+  private actions: Actions;
+  private mutations: Mutations;
+  private middlewares: Middleware[];
+  private listeners: Listener[];
   private queuedListeners: Function[];
   private isUpdating: boolean;
 
-  constructor(options: StoreOptions<State>) {
+  constructor(options: StoreOptions) {
     const { state, actions = {}, mutations = {}, middlewares = [] } = options;
     this.state = state;
     this.actions = actions;
@@ -69,11 +73,11 @@ class ReStore<State extends Record<string, any>> {
     }
   }
 
-  public subscribe(listener: Listener<State>): void {
+  public subscribe(listener: Listener): void {
     this.listeners.push(listener);
   }
 
-  public unsubscribe(listener: Listener<State>): void {
+  public unsubscribe(listener: Listener): void {
     this.listeners = this.listeners.filter((l) => l !== listener);
   }
 
@@ -114,7 +118,7 @@ class ReStore<State extends Record<string, any>> {
   }
 }
 
-function createStore<State extends Record<string, any>>(options: StoreOptions<State>): ReStore<State> {
+function createStore(options: StoreOptions): ReStore {
   return new ReStore(options);
 }
 
