@@ -15,7 +15,7 @@ interface Actions {
 }
 
 interface Mutations {
-  [key: string]: (state: State, payload?: any) => void;
+  [key: string]: (state: State, payload?: any) => Promise<void> | void;
 }
 
 interface Middleware {
@@ -109,7 +109,10 @@ class ReStore {
     const mutation = this.mutations[mutationName];
     if (mutation) {
       const previousState = this.state;
-      await mutation(this.state, payload);
+      const mutationResult : Promise<void> | void = mutation(this.state, payload);
+      if (typeof mutationResult?.then === 'function') {
+        await mutationResult;
+      }
       const changedKeys = Object.keys(this.state).filter((key) => this.state[key] !== previousState[key]) as (keyof State)[];
       this.notify(changedKeys);
     } else {
