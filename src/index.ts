@@ -11,12 +11,17 @@ interface State {
 }
 
 interface Actions {
-  [key: string]: (store: ReStore, payload?: any) => any;
+  [key: string]: Action;
 }
 
+type Action = (store: ReStore, payload?: any) => any;
+
 interface Mutations {
-  [key: string]: (state: State, payload?: any) => Promise<void> | void;
+  [key: string]: Mutation;
 }
+
+type Mutation = (state: State, payload?: any) => Promise<void> | void
+
 
 interface Middleware {
   (context: MiddlewareContext): (next: Function) => any;
