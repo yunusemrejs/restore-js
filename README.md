@@ -177,7 +177,7 @@ const MyComponent = () => {
   return (
     <div>
       <p>Count: {state.count}</p>
-      <button onClick={() =>  store.dispatch('increment', 1);}>Increment</button>
+      <button onClick={() =>  store.dispatch('increment', 1)}>Increment</button>
     </div>
   );
 };
