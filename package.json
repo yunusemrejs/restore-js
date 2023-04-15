@@ -1,5 +1,5 @@
 {
-	"name": "re-store",
+	"name": "@yunusemrejs/restore-js",
 	"version": "1.0.0",
 	"description": "Centralized State Management Library",
 	"keywords": [
