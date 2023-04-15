@@ -172,7 +172,7 @@ export default useStore;
 
 `component.js`
 ```jsx
-import Store from './store.js'
+import store from './store.js'
 import useStore from './useStore'
 
 const MyComponent = () => {
