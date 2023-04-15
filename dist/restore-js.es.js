@@ -26,14 +26,15 @@ class ReStore {
     return this.state;
   }
   setState(state) {
+    const newState = Object.assign({}, state);
     if (this.isUpdating) {
       this.queuedListeners.push(() => {
-        this.state = state;
+        this.state = newState;
         this.notify();
       });
     } else {
       this.isUpdating = true;
-      this.state = state;
+      this.state = newState;
       this.notify();
       this.isUpdating = false;
       this.queuedListeners.forEach((listener) => listener());
@@ -47,11 +48,12 @@ class ReStore {
     this.listeners = this.listeners.filter((l) => l !== listener);
   }
   notify(changedKeys = []) {
+    const newState = Object.assign({}, this.state);
     this.listeners.forEach((listener) => {
       if (!changedKeys.length)
-        listener.callback(this.state);
+        listener.callback(newState);
       if (listener.watchedStates.length === 0 || listener.watchedStates.some((key) => changedKeys.includes(key))) {
-        listener.callback(this.state);
+        listener.callback(newState);
       }
     });
   }
@@ -73,7 +75,10 @@ class ReStore {
     const mutation = this.mutations[mutationName];
     if (mutation) {
       const previousState = this.state;
-      await mutation(this.state, payload);
+      const mutationResult = mutation(this.state, payload);
+      if (typeof (mutationResult == null ? void 0 : mutationResult.then) === "function") {
+        await mutationResult;
+      }
       const changedKeys = Object.keys(this.state).filter((key) => this.state[key] !== previousState[key]);
       this.notify(changedKeys);
     } else {

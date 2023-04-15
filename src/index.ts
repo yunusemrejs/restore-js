@@ -58,14 +58,16 @@ class ReStore {
   }
 
   public setState(state: State): void {
+    const newState = Object.assign({}, state);
+
     if (this.isUpdating) {
       this.queuedListeners.push(() => {
-        this.state = state;
+        this.state = newState;
         this.notify();
       });
     } else {
       this.isUpdating = true;
-      this.state = state;
+      this.state = newState;
       this.notify();
       this.isUpdating = false;
       this.queuedListeners.forEach((listener) => listener());
@@ -82,10 +84,11 @@ class ReStore {
   }
 
   public notify(changedKeys: Array<keyof State> = []): void {
+    const newState = Object.assign({}, this.state);
     this.listeners.forEach((listener) => {
-      if(!changedKeys.length) listener.callback(this.state);
+      if(!changedKeys.length) listener.callback(newState);
       if (listener.watchedStates.length === 0 || listener.watchedStates.some((key) => changedKeys.includes(key))) {
-        listener.callback(this.state);
+        listener.callback(newState);
       }
     });
   }

@@ -11,7 +11,7 @@ interface Actions {
     [key: string]: (store: ReStore, payload?: any) => any;
 }
 interface Mutations {
-    [key: string]: (state: State, payload?: any) => void;
+    [key: string]: (state: State, payload?: any) => Promise<void> | void;
 }
 interface Middleware {
     (context: MiddlewareContext): (next: Function) => any;
