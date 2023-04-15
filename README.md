@@ -118,8 +118,9 @@ store.dispatch('increment', 3);
 ```
 ### How you can use in React
 How you can use ReStore in a React application with hooks:
+
+`store.js`
 ```jsx
-import { useState, useEffect } from 'react';
 import { createStore } from 'restore-js';
 
 const store = createStore({
@@ -139,7 +140,13 @@ const store = createStore({
   middlewares: [],
 });
 
-const useStore = (watchedStates) => {
+export default store;
+```
+
+`useStore.js`
+```jsx
+import { useState, useEffect } from 'react';
+const useStore = (store, watchedStates) => {
   const [state, setState] = useState(store.getState());
 
   useEffect(() => {
@@ -160,8 +167,16 @@ const useStore = (watchedStates) => {
   return { state, incrementCount };
 };
 
+export default useStore;
+```
+
+`component.js`
+```jsx
+import Store from './store.js'
+import useStore from './useStore'
+
 const MyComponent = () => {
-  const { state, incrementCount } = useStore(['count']);
+  const { state, incrementCount } = useStore(store,['count']);
 
   return (
     <div>
