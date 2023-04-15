@@ -40,7 +40,7 @@ class ReStore<State extends Record<string, any>> {
 
   constructor(options: StoreOptions<State>) {
     const { state, actions = {}, mutations = {}, middlewares = [] } = options;
-    this.state = Object.freeze(state);
+    this.state = state;
     this.actions = actions;
     this.mutations = mutations;
     this.middlewares = middlewares;
@@ -56,12 +56,12 @@ class ReStore<State extends Record<string, any>> {
   public setState(state: State): void {
     if (this.isUpdating) {
       this.queuedListeners.push(() => {
-        this.state = Object.freeze(state);
+        this.state = state;
         this.notify();
       });
     } else {
       this.isUpdating = true;
-      this.state = Object.freeze(state);
+      this.state = state;
       this.notify();
       this.isUpdating = false;
       this.queuedListeners.forEach((listener) => listener());
