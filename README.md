@@ -160,11 +160,7 @@ const useStore = (store, watchedStates) => {
     return () => store.unsubscribe(listener);
   }, []);
 
-  const incrementCount = (value) => {
-    store.dispatch('increment', value);
-  };
-
-  return { state, incrementCount };
+  return state;
 };
 
 export default useStore;
@@ -176,12 +172,12 @@ import store from './store.js'
 import useStore from './useStore'
 
 const MyComponent = () => {
-  const { state, incrementCount } = useStore(store,['count']);
+  const state = useStore(store,['count']);
 
   return (
     <div>
       <p>Count: {state.count}</p>
-      <button onClick={() => incrementCount(1)}>Increment</button>
+      <button onClick={() =>  store.dispatch('increment', 1);}>Increment</button>
     </div>
   );
 };
