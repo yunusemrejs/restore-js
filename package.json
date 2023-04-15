@@ -31,7 +31,6 @@
 		}
 	},
 	"type": "module",
-	"types": "dist/types/index.d.ts",
 	"devDependencies": {
 		"@typescript-eslint/eslint-plugin": "^5.58.0",
 		"@typescript-eslint/parser": "^5.58.0",
