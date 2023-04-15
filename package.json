@@ -44,7 +44,7 @@
 	},
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc --project tsconfig.json && vite build",
+		"build": "tsc && vite build",
 		"preview": "vite preview"
 	}
 }
