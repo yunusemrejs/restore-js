@@ -169,7 +169,7 @@ import store from './store.js'
 import useStore from './useStore'
 
 const MyComponent = () => {
-  const state = useStore(store,new Set().add('count'));
+  const state = useStore(store,new Set(['count']));
 
   return (
     <div>
