@@ -88,12 +88,15 @@ class ReStore {
     this.listeners = this.listeners.filter((l) => l !== listener);
   }
 
-  public notify(changedKeys: Array<keyof State> = []): void {
+  public notify(changedKeys?: Set<keyof State>): void {
     const newState = Object.assign({}, this.state);
     this.listeners.forEach((listener) => {
-      if(!changedKeys.length) listener.callback(newState);
-      if (listener.watchedStates.length === 0 || listener.watchedStates.some((key) => changedKeys.includes(key))) {
+      if(!changedKeys || changedKeys.size == 0) {
         listener.callback(newState);
+      } else {
+        if (listener.watchedStates.length === 0 || listener.watchedStates.some((key) => changedKeys.has(key))) {
+          listener.callback(newState);
+        }
       }
     });
   }
@@ -121,7 +124,12 @@ class ReStore {
       if (typeof mutationResult?.then === 'function') {
         await mutationResult;
       }
-      const changedKeys = Object.keys(this.state).filter((key) => this.state[key] !== previousState[key]) as (keyof State)[];
+      const changedKeys = new Set<keyof State>();
+      Object.keys(this.state).forEach((key) => {
+        if (this.state[key] !== previousState[key]) {
+          changedKeys.add(key as keyof State);
+        }
+      });
       this.notify(changedKeys);
     } else {
       console.error(`Mutation '${mutationName}' not found.`);
