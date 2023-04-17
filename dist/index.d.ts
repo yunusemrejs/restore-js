@@ -33,11 +33,12 @@ declare class ReStore {
     private mutations;
     private middlewares;
     private listeners;
+    private nextListenerId;
     constructor(options: StoreOptions);
     getState(): State;
     setState(state: State): void;
-    subscribe(listener: Listener): void;
-    unsubscribe(listener: Listener): void;
+    subscribe(listener: Listener): number;
+    unsubscribe(listenerId: number): void;
     notify(changedKeys?: Set<keyof State>): void;
     dispatch(actionName: string, payload?: any): Promise<any>;
     commit(mutationName: string, payload?: any): Promise<void>;

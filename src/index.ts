@@ -43,7 +43,8 @@ class ReStore {
   private actions: Actions;
   private mutations: Mutations;
   private middlewares: Middlewares;
-  private listeners: Listener[];
+  private listeners: Map<number, Listener>;
+  private nextListenerId: number;
 
   constructor(options: StoreOptions) {
     const { state, actions = {}, mutations = {}, middlewares = {} } = options;
@@ -51,7 +52,8 @@ class ReStore {
     this.actions = actions;
     this.mutations = mutations;
     this.middlewares = middlewares;
-    this.listeners = [];
+    this.listeners = new Map<number, Listener>();
+    this.nextListenerId = 0;
   }
 
   public getState(): State {
@@ -64,12 +66,14 @@ class ReStore {
     this.notify();
   }
 
-  public subscribe(listener: Listener): void {
-    this.listeners.push(listener);
+  public subscribe(listener: Listener): number {
+    const listenerId = this.nextListenerId++;
+    this.listeners.set(listenerId, listener);
+    return listenerId;
   }
 
-  public unsubscribe(listener: Listener): void {
-    this.listeners = this.listeners.filter(l => l !== listener);
+  public unsubscribe(listenerId: number): void {
+    this.listeners.delete(listenerId);
   }
 
   public notify(changedKeys?: Set<keyof State>): void {

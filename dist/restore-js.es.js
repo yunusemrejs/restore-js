@@ -11,12 +11,14 @@ class ReStore {
     __publicField(this, "mutations");
     __publicField(this, "middlewares");
     __publicField(this, "listeners");
+    __publicField(this, "nextListenerId");
     const { state, actions = {}, mutations = {}, middlewares = {} } = options;
     this.state = state;
     this.actions = actions;
     this.mutations = mutations;
     this.middlewares = middlewares;
-    this.listeners = [];
+    this.listeners = /* @__PURE__ */ new Map();
+    this.nextListenerId = 0;
   }
   getState() {
     return this.state;
@@ -27,10 +29,12 @@ class ReStore {
     this.notify();
   }
   subscribe(listener) {
-    this.listeners.push(listener);
+    const listenerId = this.nextListenerId++;
+    this.listeners.set(listenerId, listener);
+    return listenerId;
   }
-  unsubscribe(listener) {
-    this.listeners = this.listeners.filter((l) => l !== listener);
+  unsubscribe(listenerId) {
+    this.listeners.delete(listenerId);
   }
   notify(changedKeys) {
     const newState = Object.assign({}, this.state);
@@ -70,7 +74,7 @@ class ReStore {
       await mutationResult;
     }
     const changedKeys = /* @__PURE__ */ new Set();
-    for (const key in previousState) {
+    for (const key of Object.keys(previousState)) {
       if (previousState[key] !== this.state[key]) {
         changedKeys.add(key);
       }
