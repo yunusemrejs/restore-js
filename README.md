@@ -61,7 +61,7 @@ console.log(store.getState().count); // 8
 
 ### Subscribing to State Changes
 
-To subscribe to state changes, you can call the `subscribe` method and pass a listener object that contains a callback function and an array of watched state keys.
+To subscribe to state changes, you can call the `subscribe` method and pass a listener object that contains a callback function and an array of watched state keys. Subscribe function will return the listenerID value.
 
 ```js
 const listener = {
@@ -71,28 +71,25 @@ const listener = {
   },
 };
 
-store.subscribe(listener);
+const listenerID = store.subscribe(listener);
 ```
 
 ### Unsubscribing from State Changes
 
-To unsubscribe from state changes, you can call the `unsubscribe` method and pass the listener object.
+To unsubscribe from state changes, you can call the `unsubscribe` method and pass the listenerID.
 
 ```js
-store.unsubscribe(listener);
+store.unsubscribe(listenerId);
 ```
 ### Using Middlewares
 
-ReStore allows you to use middlewares to intercept and modify actions before they are executed and mutations before they update the state. Middlewares are functions that take a `MiddlewareContext` object as input and return a function that takes a `next` function as input.
+ReStore allows you to use middlewares to intercept and modify actions before they are executed and mutations before they update the state. Middlewares are functions that take a `MiddlewareContext` object.
 
 ```js
 const loggerMiddleware = (context) => {
-  return (next) => {
-    console.log(`Action ${context.actionName} was dispatched`);
-    const result = next(context.store, context.payload);
-    console.log(`The new state is ${JSON.stringify(context.store.getState())}`);
-    return result;
-  };
+  console.log(`Action ${context.actionName} was dispatched`);
+  console.log(`The new state is ${JSON.stringify(context.store.getState())}`);
+  return result;
 };
 
 const store = createStore({
@@ -156,8 +153,8 @@ const useStore = (store, watchedStates) => {
         setState(newState);
       },
     };
-    store.subscribe(listener);
-    return () => store.unsubscribe(listener);
+    const listenerID = store.subscribe(listener);
+    return () => store.unsubscribe(listenerID);
   }, []);
 
   return state;
@@ -172,7 +169,7 @@ import store from './store.js'
 import useStore from './useStore'
 
 const MyComponent = () => {
-  const state = useStore(store,['count']);
+  const state = useStore(store,new Set().add('count'));
 
   return (
     <div>
