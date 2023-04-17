@@ -11,35 +11,20 @@ class ReStore {
     __publicField(this, "mutations");
     __publicField(this, "middlewares");
     __publicField(this, "listeners");
-    __publicField(this, "queuedListeners");
-    __publicField(this, "isUpdating");
-    const { state, actions = {}, mutations = {}, middlewares = [] } = options;
+    const { state, actions = {}, mutations = {}, middlewares = {} } = options;
     this.state = state;
     this.actions = actions;
     this.mutations = mutations;
     this.middlewares = middlewares;
     this.listeners = [];
-    this.queuedListeners = [];
-    this.isUpdating = false;
   }
   getState() {
     return this.state;
   }
   setState(state) {
     const newState = Object.assign({}, state);
-    if (this.isUpdating) {
-      this.queuedListeners.push(() => {
-        this.state = newState;
-        this.notify();
-      });
-    } else {
-      this.isUpdating = true;
-      this.state = newState;
-      this.notify();
-      this.isUpdating = false;
-      this.queuedListeners.forEach((listener) => listener());
-      this.queuedListeners = [];
-    }
+    this.state = newState;
+    this.notify();
   }
   subscribe(listener) {
     this.listeners.push(listener);
@@ -47,43 +32,50 @@ class ReStore {
   unsubscribe(listener) {
     this.listeners = this.listeners.filter((l) => l !== listener);
   }
-  notify(changedKeys = []) {
+  notify(changedKeys) {
     const newState = Object.assign({}, this.state);
     this.listeners.forEach((listener) => {
-      if (!changedKeys.length)
+      if (!changedKeys || changedKeys.size == 0) {
         listener.callback(newState);
-      if (listener.watchedStates.length === 0 || listener.watchedStates.some((key) => changedKeys.includes(key))) {
-        listener.callback(newState);
+      } else {
+        if (listener.watchedStates.length === 0 || listener.watchedStates.some((key) => changedKeys.has(key))) {
+          listener.callback(newState);
+        }
       }
     });
   }
   async dispatch(actionName, payload) {
     const action = this.actions[actionName];
-    if (action) {
-      const context = { store: this, actionName, payload };
-      const chain = this.middlewares.map((middleware) => middleware(context));
-      let actionResult = action(this, payload);
-      for (const middleware of chain) {
-        actionResult = await middleware(actionResult);
-      }
-      return actionResult;
-    } else {
+    if (!action) {
       console.error(`Action '${actionName}' not found.`);
+      return;
     }
+    let processedPayload = payload;
+    for (const key of Object.keys(this.middlewares)) {
+      const middleware = this.middlewares[key];
+      processedPayload = await middleware({ actionName, payload: processedPayload });
+    }
+    const actionResult = action(this, processedPayload);
+    return actionResult;
   }
   async commit(mutationName, payload) {
     const mutation = this.mutations[mutationName];
-    if (mutation) {
-      const previousState = this.state;
-      const mutationResult = mutation(this.state, payload);
-      if (typeof (mutationResult == null ? void 0 : mutationResult.then) === "function") {
-        await mutationResult;
-      }
-      const changedKeys = Object.keys(this.state).filter((key) => this.state[key] !== previousState[key]);
-      this.notify(changedKeys);
-    } else {
+    if (!mutation) {
       console.error(`Mutation '${mutationName}' not found.`);
+      return;
     }
+    const previousState = this.state;
+    const mutationResult = mutation(this.state, payload);
+    if (typeof (mutationResult == null ? void 0 : mutationResult.then) === "function") {
+      await mutationResult;
+    }
+    const changedKeys = /* @__PURE__ */ new Set();
+    for (const key in previousState) {
+      if (previousState[key] !== this.state[key]) {
+        changedKeys.add(key);
+      }
+    }
+    this.notify(changedKeys);
   }
 }
 function createStore(options) {

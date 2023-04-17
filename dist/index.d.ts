@@ -2,7 +2,7 @@ interface StoreOptions {
     state: State;
     actions?: Actions;
     mutations?: Mutations;
-    middlewares?: Middleware[];
+    middlewares?: Middlewares;
 }
 interface State {
     [key: string]: any;
@@ -15,11 +15,11 @@ interface Mutations {
     [key: string]: Mutation;
 }
 type Mutation = (state: State, payload?: any) => Promise<void> | void;
-interface Middleware {
-    (context: MiddlewareContext): (next: Function) => any;
+interface Middlewares {
+    [key: string]: Middleware;
 }
+type Middleware = (context: MiddlewareContext) => Promise<any> | any;
 interface MiddlewareContext {
-    store: ReStore;
     actionName: string;
     payload?: any;
 }
@@ -33,14 +33,12 @@ declare class ReStore {
     private mutations;
     private middlewares;
     private listeners;
-    private queuedListeners;
-    private isUpdating;
     constructor(options: StoreOptions);
     getState(): State;
     setState(state: State): void;
     subscribe(listener: Listener): void;
     unsubscribe(listener: Listener): void;
-    notify(changedKeys?: Array<keyof State>): void;
+    notify(changedKeys?: Set<keyof State>): void;
     dispatch(actionName: string, payload?: any): Promise<any>;
     commit(mutationName: string, payload?: any): Promise<void>;
 }
