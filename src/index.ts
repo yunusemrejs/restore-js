@@ -119,7 +119,8 @@ class ReStore {
     let processedPayload = payload;
     for (const key of Object.keys(this.middlewares)) {
       const middleware = this.middlewares[key];
-      processedPayload = await middleware({ actionName, payload: processedPayload });
+      const result = await middleware({ actionName, payload: processedPayload });
+      processedPayload = result;
     }
     const actionResult = action(this, processedPayload);
     return actionResult;

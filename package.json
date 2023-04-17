@@ -6,7 +6,7 @@
 		"state-management"
 	],
 	"main": "./dist/restore-js.umd.js",
-  "types": "./dist/index.d.js",
+	"types": "./dist/index.d.js",
 	"homepage": "https://github.com/yunusemrejs/restore-js#readme",
 	"bugs": {
 		"url": "https://github.com/yunusemrejs/restore-js/issues"
@@ -22,7 +22,9 @@
 		"url": "https://github.com/yunusemrejs/restore-js"
 	},
 	"private": false,
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"exports": {
 		".": {
 			"import": "./dist/restore-js.es.js",
@@ -31,11 +33,14 @@
 	},
 	"type": "module",
 	"devDependencies": {
+		"@types/jest": "^29.5.0",
 		"@typescript-eslint/eslint-plugin": "^5.58.0",
 		"@typescript-eslint/parser": "^5.58.0",
 		"eslint": "^8.38.0",
+		"jest": "^29.5.0",
 		"prettier": "^2.8.7",
 		"terser": "^5.16.9",
+		"ts-jest": "^29.1.0",
 		"typescript": "^4.9.3",
 		"vite": "^4.2.0",
 		"vite-plugin-dts": "^2.2.0"
@@ -43,6 +48,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"test": "jest"
 	}
 }
