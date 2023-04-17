@@ -10,15 +10,15 @@ class ReStore {
     __publicField(this, "actions");
     __publicField(this, "mutations");
     __publicField(this, "middlewares");
-    __publicField(this, "listeners");
     __publicField(this, "nextListenerId");
+    __publicField(this, "watchedStatesMap");
     const { state, actions = {}, mutations = {}, middlewares = {} } = options;
     this.state = state;
     this.actions = actions;
     this.mutations = mutations;
     this.middlewares = middlewares;
-    this.listeners = /* @__PURE__ */ new Map();
-    this.nextListenerId = 0;
+    this.nextListenerId = 1;
+    this.watchedStatesMap = /* @__PURE__ */ new Map();
   }
   getState() {
     return this.state;
@@ -29,23 +29,44 @@ class ReStore {
     this.notify();
   }
   subscribe(listener) {
+    var _a;
     const listenerId = this.nextListenerId++;
-    this.listeners.set(listenerId, listener);
+    if (!listener.watchedStates || listener.watchedStates.size == 0) {
+      if (this.watchedStatesMap.has("watchAll")) {
+        (_a = this.watchedStatesMap.get("watchAll")) == null ? void 0 : _a.set(listenerId, listener.callback);
+      } else {
+        this.watchedStatesMap.set("watchAll", (/* @__PURE__ */ new Map()).set(listenerId, listener.callback));
+      }
+    }
+    listener.watchedStates.forEach((stateKey) => {
+      var _a2;
+      if (this.watchedStatesMap.has(stateKey)) {
+        (_a2 = this.watchedStatesMap.get(stateKey)) == null ? void 0 : _a2.set(listenerId, listener.callback);
+      } else {
+        this.watchedStatesMap.set(stateKey, (/* @__PURE__ */ new Map()).set(listenerId, listener.callback));
+      }
+    });
     return listenerId;
   }
   unsubscribe(listenerId) {
-    this.listeners.delete(listenerId);
+    this.watchedStatesMap.forEach((watchedState) => {
+      watchedState.delete(listenerId);
+    });
   }
   notify(changedKeys) {
     const newState = Object.assign({}, this.state);
-    this.listeners.forEach((listener) => {
-      if (!changedKeys || changedKeys.size == 0) {
-        listener.callback(newState);
-      } else {
-        if (listener.watchedStates.size === 0 || Array.from(changedKeys).some((key) => listener.watchedStates.has(key))) {
-          listener.callback(newState);
-        }
-      }
+    if (!changedKeys || changedKeys.size == 0) {
+      this.watchedStatesMap.forEach((state) => state.forEach((callback) => {
+        callback(newState);
+      }));
+      return;
+    }
+    changedKeys.forEach((changedKey) => {
+      var _a, _b;
+      (_a = this.watchedStatesMap.get(changedKey)) == null ? void 0 : _a.forEach((callback) => {
+        callback(newState);
+      });
+      (_b = this.watchedStatesMap.get("watchAll")) == null ? void 0 : _b.forEach((callback) => callback(newState));
     });
   }
   async dispatch(actionName, payload) {
@@ -68,11 +89,8 @@ class ReStore {
       console.error(`Mutation '${mutationName}' not found.`);
       return;
     }
-    const previousState = this.state;
-    const mutationResult = mutation(this.state, payload);
-    if (typeof (mutationResult == null ? void 0 : mutationResult.then) === "function") {
-      await mutationResult;
-    }
+    const previousState = { ...this.state };
+    await mutation(this.state, payload);
     const changedKeys = /* @__PURE__ */ new Set();
     for (const key of Object.keys(previousState)) {
       if (previousState[key] !== this.state[key]) {

@@ -32,9 +32,10 @@ interface MiddlewareContext {
   payload?: any;
 }
 
+type ListenerCallbackFunction = (state: State) => void;
 interface Listener {
   watchedStates: Set<keyof State>;
-  callback: (state: State) => void;
+  callback: ListenerCallbackFunction;
 }
 
 class ReStore {
@@ -42,8 +43,8 @@ class ReStore {
   private actions: Actions;
   private mutations: Mutations;
   private middlewares: Middlewares;
-  private listeners: Map<number, Listener>;
   private nextListenerId: number;
+  private watchedStatesMap: Map<keyof State, Map<number, ListenerCallbackFunction>>;
 
   constructor(options: StoreOptions) {
     const { state, actions = {}, mutations = {}, middlewares = {} } = options;
@@ -51,8 +52,8 @@ class ReStore {
     this.actions = actions;
     this.mutations = mutations;
     this.middlewares = middlewares;
-    this.listeners = new Map<number, Listener>();
-    this.nextListenerId = 0;
+    this.nextListenerId = 1;
+    this.watchedStatesMap = new Map<keyof State, Map<number, ListenerCallbackFunction>>();
   }
 
   public getState(): State {
@@ -67,24 +68,45 @@ class ReStore {
 
   public subscribe(listener: Listener): number {
     const listenerId = this.nextListenerId++;
-    this.listeners.set(listenerId, listener);
+
+    if(!listener.watchedStates || listener.watchedStates.size == 0) {
+      if(this.watchedStatesMap.has('watchAll')){
+        this.watchedStatesMap.get('watchAll')?.set(listenerId, listener.callback)
+      }else {
+        this.watchedStatesMap.set('watchAll', new Map().set(listenerId, listener.callback))
+      }
+    }
+
+    listener.watchedStates.forEach((stateKey) => {
+      if (this.watchedStatesMap.has(stateKey)) {
+        this.watchedStatesMap.get(stateKey)?.set(listenerId, listener.callback) 
+      } else {
+        this.watchedStatesMap.set(stateKey, new Map().set(listenerId, listener.callback));
+      }
+    });
+
     return listenerId;
   }
 
   public unsubscribe(listenerId: number): void {
-    this.listeners.delete(listenerId);
+    this.watchedStatesMap.forEach((watchedState) => {
+      watchedState!.delete(listenerId)
+    })
   }
 
   public notify(changedKeys?: Set<keyof State>): void {
     const newState = Object.assign({}, this.state);
-    this.listeners.forEach(listener => {
-      if (!changedKeys || changedKeys.size == 0) {
-        listener.callback(newState);
-      } else {
-        if (listener.watchedStates.size === 0 || Array.from(changedKeys).some(key => listener.watchedStates.has(key))) {
-          listener.callback(newState);
-        }
-      }
+    if (!changedKeys || changedKeys.size == 0) {
+      this.watchedStatesMap.forEach(state => state.forEach(callback => {
+        callback(newState)
+      }))
+      return;
+    }
+    changedKeys.forEach(changedKey => {
+      this.watchedStatesMap.get(changedKey)?.forEach(callback => {
+        callback(newState)
+      });
+      this.watchedStatesMap.get('watchAll')?.forEach(callback => callback(newState))
     });
   }
 
@@ -110,12 +132,8 @@ class ReStore {
       return;
     }
 
-    const previousState = this.state;
-    const mutationResult: Promise<void> | void = mutation(this.state, payload);
-    if (typeof mutationResult?.then === 'function') {
-      await mutationResult;
-    }
-
+    const previousState = {...this.state};
+    await mutation(this.state, payload);
     const changedKeys = new Set<keyof State>();
     for (const key of Object.keys(previousState)) {
       if (previousState[key] !== this.state[key]) {

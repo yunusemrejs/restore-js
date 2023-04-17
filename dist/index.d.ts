@@ -23,17 +23,18 @@ interface MiddlewareContext {
     actionName: string;
     payload?: any;
 }
+type ListenerCallbackFunction = (state: State) => void;
 interface Listener {
     watchedStates: Set<keyof State>;
-    callback: (state: State) => void;
+    callback: ListenerCallbackFunction;
 }
 declare class ReStore {
     private state;
     private actions;
     private mutations;
     private middlewares;
-    private listeners;
     private nextListenerId;
+    private watchedStatesMap;
     constructor(options: StoreOptions);
     getState(): State;
     setState(state: State): void;
