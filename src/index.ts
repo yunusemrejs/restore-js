@@ -44,8 +44,6 @@ class ReStore {
   private mutations: Mutations;
   private middlewares: Middleware[];
   private listeners: Listener[];
-  private queuedListeners: Function[];
-  private isUpdating: boolean;
 
   constructor(options: StoreOptions) {
     const { state, actions = {}, mutations = {}, middlewares = [] } = options;
@@ -54,8 +52,6 @@ class ReStore {
     this.mutations = mutations;
     this.middlewares = middlewares;
     this.listeners = [];
-    this.queuedListeners = [];
-    this.isUpdating = false;
   }
 
   public getState(): State {
@@ -64,20 +60,8 @@ class ReStore {
 
   public setState(state: State): void {
     const newState = Object.assign({}, state);
-
-    if (this.isUpdating) {
-      this.queuedListeners.push(() => {
-        this.state = newState;
-        this.notify();
-      });
-    } else {
-      this.isUpdating = true;
-      this.state = newState;
-      this.notify();
-      this.isUpdating = false;
-      this.queuedListeners.forEach((listener) => listener());
-      this.queuedListeners = [];
-    }
+    this.state = newState;
+    this.notify();
   }
 
   public subscribe(listener: Listener): void {
