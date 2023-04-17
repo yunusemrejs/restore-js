@@ -1,6 +1,6 @@
 {
 	"name": "@yunusemrejs/restore-js",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "Lightweight and simple state management library for JavaScript applications",
 	"keywords": [
 		"state-management"
