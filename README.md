@@ -1,6 +1,8 @@
 # ReStore JS
 ReStore is a lightweight and simple state management library for JavaScript applications. It allows you to manage the state of your application and execute actions and mutations in a predictable and centralized way.
 
+[![Demo](https://img.shields.io/badge/-Demo-orange?style=for-the-badge)]([https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE](https://yunusemrejs.github.io/restore-ecommerce-demo/))
+
 ## Installation
 
 ```bash
