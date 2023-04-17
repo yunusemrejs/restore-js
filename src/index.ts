@@ -114,7 +114,7 @@ class ReStore {
     }
 
     const changedKeys = new Set<keyof State>();
-    for (const key in previousState) {
+    for (const key of Object.keys(previousState)) {
       if (previousState[key] !== this.state[key]) {
         changedKeys.add(key as keyof State);
       }
