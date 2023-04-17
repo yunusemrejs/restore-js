@@ -24,7 +24,7 @@ interface MiddlewareContext {
     payload?: any;
 }
 interface Listener {
-    watchedStates: (keyof State)[];
+    watchedStates: Set<keyof State>;
     callback: (state: State) => void;
 }
 declare class ReStore {

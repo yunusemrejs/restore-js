@@ -42,7 +42,7 @@ class ReStore {
       if (!changedKeys || changedKeys.size == 0) {
         listener.callback(newState);
       } else {
-        if (listener.watchedStates.length === 0 || listener.watchedStates.some((key) => changedKeys.has(key))) {
+        if (listener.watchedStates.size === 0 || Array.from(changedKeys).some((key) => listener.watchedStates.has(key))) {
           listener.callback(newState);
         }
       }
