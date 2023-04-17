@@ -3,7 +3,7 @@ interface StoreOptions {
   state: State;
   actions?: Actions;
   mutations?: Mutations;
-  middlewares?: Middleware[];
+  middlewares?: Middlewares;
 }
 
 interface State {
@@ -20,15 +20,15 @@ interface Mutations {
   [key: string]: Mutation;
 }
 
-type Mutation = (state: State, payload?: any) => Promise<void> | void
+type Mutation = (state: State, payload?: any) => Promise<void> | void;
 
 
-interface Middleware {
-  (context: MiddlewareContext): (next: Function) => any;
+interface Middlewares {
+  [key: string]: Middleware;
 }
 
+type Middleware = (context: MiddlewareContext) => Promise<any> | any;
 interface MiddlewareContext {
-  store: ReStore;
   actionName: string;
   payload?: any;
 }
@@ -42,11 +42,11 @@ class ReStore {
   private state: State;
   private actions: Actions;
   private mutations: Mutations;
-  private middlewares: Middleware[];
+  private middlewares: Middlewares;
   private listeners: Listener[];
 
   constructor(options: StoreOptions) {
-    const { state, actions = {}, mutations = {}, middlewares = [] } = options;
+    const { state, actions = {}, mutations = {}, middlewares = {} } = options;
     this.state = state;
     this.actions = actions;
     this.mutations = mutations;
@@ -69,16 +69,16 @@ class ReStore {
   }
 
   public unsubscribe(listener: Listener): void {
-    this.listeners = this.listeners.filter((l) => l !== listener);
+    this.listeners = this.listeners.filter(l => l !== listener);
   }
 
   public notify(changedKeys?: Set<keyof State>): void {
     const newState = Object.assign({}, this.state);
-    this.listeners.forEach((listener) => {
-      if(!changedKeys || changedKeys.size == 0) {
+    this.listeners.forEach(listener => {
+      if (!changedKeys || changedKeys.size == 0) {
         listener.callback(newState);
       } else {
-        if (listener.watchedStates.length === 0 || listener.watchedStates.some((key) => changedKeys.has(key))) {
+        if (listener.watchedStates.length === 0 || listener.watchedStates.some(key => changedKeys.has(key))) {
           listener.callback(newState);
         }
       }
@@ -87,17 +87,17 @@ class ReStore {
 
   public async dispatch(actionName: string, payload?: any): Promise<any> {
     const action = this.actions[actionName];
-    if (action) {
-      const context = { store: this, actionName, payload };
-      const chain = this.middlewares.map((middleware) => middleware(context));
-      let actionResult = action(this, payload);
-      for (const middleware of chain) {
-        actionResult = await middleware(actionResult);
-      }
-      return actionResult;
-    } else {
+    if (!action) {
       console.error(`Action '${actionName}' not found.`);
+      return;
     }
+    let processedPayload = payload;
+    for (const key of Object.keys(this.middlewares)) {
+      const middleware = this.middlewares[key];
+      processedPayload = await middleware({ actionName, payload: processedPayload });
+    }
+    const actionResult = action(this, processedPayload);
+    return actionResult;
   }
 
   public async commit(mutationName: string, payload?: any): Promise<void> {
@@ -108,7 +108,7 @@ class ReStore {
     }
 
     const previousState = this.state;
-    const mutationResult : Promise<void> | void = mutation(this.state, payload);
+    const mutationResult: Promise<void> | void = mutation(this.state, payload);
     if (typeof mutationResult?.then === 'function') {
       await mutationResult;
     }
