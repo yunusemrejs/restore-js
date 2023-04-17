@@ -118,22 +118,25 @@ class ReStore {
 
   public async commit(mutationName: string, payload?: any): Promise<void> {
     const mutation = this.mutations[mutationName];
-    if (mutation) {
-      const previousState = this.state;
-      const mutationResult : Promise<void> | void = mutation(this.state, payload);
-      if (typeof mutationResult?.then === 'function') {
-        await mutationResult;
-      }
-      const changedKeys = new Set<keyof State>();
-      Object.keys(this.state).forEach((key) => {
-        if (this.state[key] !== previousState[key]) {
-          changedKeys.add(key as keyof State);
-        }
-      });
-      this.notify(changedKeys);
-    } else {
+    if (!mutation) {
       console.error(`Mutation '${mutationName}' not found.`);
+      return;
     }
+
+    const previousState = this.state;
+    const mutationResult : Promise<void> | void = mutation(this.state, payload);
+    if (typeof mutationResult?.then === 'function') {
+      await mutationResult;
+    }
+
+    const changedKeys = new Set<keyof State>();
+    for (const key in previousState) {
+      if (previousState[key] !== this.state[key]) {
+        changedKeys.add(key as keyof State);
+      }
+    }
+
+    this.notify(changedKeys);
   }
 }
 
