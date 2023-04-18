@@ -23,7 +23,7 @@ class ReStore {
     this.mutations = mutations;
     this.middlewares = middlewares;
     this.nextListenerId = 1;
-    this.watchedStatesMap = /* @__PURE__ */ new Map();
+    this.watchedStatesMap.set("watchAll", /* @__PURE__ */ new Map());
   }
   getState() {
     return this.state;

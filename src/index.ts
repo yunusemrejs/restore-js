@@ -59,7 +59,7 @@ class ReStore {
     this.mutations = mutations;
     this.middlewares = middlewares;
     this.nextListenerId = 1;
-    this.watchedStatesMap = new Map<keyof State | 'watchAll', Map<number, ListenerCallbackFunction>>();
+    this.watchedStatesMap.set('watchAll', new Map());
   }
 
   public getState(): State {
