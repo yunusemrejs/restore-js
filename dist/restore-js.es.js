@@ -35,22 +35,15 @@ class ReStore {
   }
   subscribe(listener) {
     const listenerId = this.nextListenerId++;
-    if (!listener.watchedStates || listener.watchedStates.size == 0) {
-      const watchAllListeners = this.watchedStatesMap.get("watchAll");
-      if (watchAllListeners) {
-        watchAllListeners.set(listenerId, listener.callback);
-      } else {
-        this.watchedStatesMap.set("watchAll", (/* @__PURE__ */ new Map()).set(listenerId, listener.callback));
-      }
-    }
-    listener.watchedStates.forEach((stateKey) => {
+    const watchedStates = listener.watchedStates || /* @__PURE__ */ new Set(["watchAll"]);
+    for (const stateKey of watchedStates) {
       const watchedStateListeners = this.watchedStatesMap.get(stateKey);
       if (watchedStateListeners) {
         watchedStateListeners.set(listenerId, listener.callback);
       } else {
         this.watchedStatesMap.set(stateKey, (/* @__PURE__ */ new Map()).set(listenerId, listener.callback));
       }
-    });
+    }
     return listenerId;
   }
   unsubscribe(listenerId) {

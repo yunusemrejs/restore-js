@@ -74,24 +74,16 @@ class ReStore {
 
   public subscribe(listener: Listener): number {
     const listenerId = this.nextListenerId++;
+    const watchedStates = listener.watchedStates || new Set(['watchAll']);
 
-    if (!listener.watchedStates || listener.watchedStates.size == 0) {
-      const watchAllListeners = this.watchedStatesMap.get('watchAll');
-      if (watchAllListeners) {
-        watchAllListeners.set(listenerId, listener.callback);
-      } else {
-        this.watchedStatesMap.set('watchAll', new Map().set(listenerId, listener.callback));
-      }
-    }
-
-    listener.watchedStates.forEach(stateKey => {
+    for (const stateKey of watchedStates) {
       const watchedStateListeners = this.watchedStatesMap.get(stateKey);
       if (watchedStateListeners) {
         watchedStateListeners.set(listenerId, listener.callback);
       } else {
         this.watchedStatesMap.set(stateKey, new Map().set(listenerId, listener.callback));
       }
-    });
+    }
 
     return listenerId;
   }
