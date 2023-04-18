@@ -1,7 +1,7 @@
 # ReStore JS
 ReStore is a lightweight and simple state management library for JavaScript applications. It allows you to manage the state of your application and execute actions and mutations in a predictable and centralized way.
 
-[![Demo](https://img.shields.io/badge/-Demo-orange?style=for-the-badge)]([https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE](https://yunusemrejs.github.io/restore-ecommerce-demo/))
+[DEMO](https://yunusemrejs.github.io/restore-ecommerce-demo/)
 
 ## Installation
 
@@ -14,7 +14,7 @@ npm i @yunusemrejs/restore-js
 To create a store, you need to provide a `StoreOptions` object that contains the initial state of your application, the actions, mutations, and middlewares
 
 ```js
-import { createStore } from '@yunusemrejs/restore';
+import { createStore } from '@yunusemrejs/restore-js';
 
 const store = createStore({
   state: {
