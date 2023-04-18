@@ -4,6 +4,11 @@ var __publicField = (obj, key, value) => {
   __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
   return value;
 };
+function callListenerCallbacks(listener, newState) {
+  listener.forEach((callback) => {
+    callback(newState);
+  });
+}
 class ReStore {
   constructor(options) {
     __publicField(this, "state");
@@ -11,7 +16,7 @@ class ReStore {
     __publicField(this, "mutations");
     __publicField(this, "middlewares");
     __publicField(this, "nextListenerId");
-    __publicField(this, "watchedStatesMap");
+    __publicField(this, "watchedStatesMap", /* @__PURE__ */ new Map());
     const { state, actions = {}, mutations = {}, middlewares = {} } = options;
     this.state = state;
     this.actions = actions;
@@ -29,19 +34,19 @@ class ReStore {
     this.notify();
   }
   subscribe(listener) {
-    var _a;
     const listenerId = this.nextListenerId++;
     if (!listener.watchedStates || listener.watchedStates.size == 0) {
-      if (this.watchedStatesMap.has("watchAll")) {
-        (_a = this.watchedStatesMap.get("watchAll")) == null ? void 0 : _a.set(listenerId, listener.callback);
+      const watchAllListeners = this.watchedStatesMap.get("watchAll");
+      if (watchAllListeners) {
+        watchAllListeners.set(listenerId, listener.callback);
       } else {
         this.watchedStatesMap.set("watchAll", (/* @__PURE__ */ new Map()).set(listenerId, listener.callback));
       }
     }
     listener.watchedStates.forEach((stateKey) => {
-      var _a2;
-      if (this.watchedStatesMap.has(stateKey)) {
-        (_a2 = this.watchedStatesMap.get(stateKey)) == null ? void 0 : _a2.set(listenerId, listener.callback);
+      const watchedStateListeners = this.watchedStatesMap.get(stateKey);
+      if (watchedStateListeners) {
+        watchedStateListeners.set(listenerId, listener.callback);
       } else {
         this.watchedStatesMap.set(stateKey, (/* @__PURE__ */ new Map()).set(listenerId, listener.callback));
       }
@@ -56,17 +61,16 @@ class ReStore {
   notify(changedKeys) {
     const newState = Object.assign({}, this.state);
     if (!changedKeys || changedKeys.size == 0) {
-      this.watchedStatesMap.forEach((state) => state.forEach((callback) => {
-        callback(newState);
-      }));
+      this.watchedStatesMap.forEach(
+        (listener) => callListenerCallbacks(listener, newState)
+      );
       return;
     }
     changedKeys.forEach((changedKey) => {
-      var _a, _b;
-      (_a = this.watchedStatesMap.get(changedKey)) == null ? void 0 : _a.forEach((callback) => {
-        callback(newState);
-      });
-      (_b = this.watchedStatesMap.get("watchAll")) == null ? void 0 : _b.forEach((callback) => callback(newState));
+      const watchedStateListeners = this.watchedStatesMap.get(changedKey);
+      watchedStateListeners && callListenerCallbacks(watchedStateListeners, newState);
+      const watchAllListeners = this.watchedStatesMap.get("watchAll");
+      watchAllListeners && callListenerCallbacks(watchAllListeners, newState);
     });
   }
   async dispatch(actionName, payload) {

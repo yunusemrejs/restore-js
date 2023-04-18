@@ -7,29 +7,29 @@ interface StoreOptions {
 }
 
 interface State {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Actions {
   [key: string]: Action;
 }
 
-type Action = (store: ReStore, payload?: any) => any;
+type Action = (store: ReStore, payload?: unknown) => unknown;
 
 interface Mutations {
   [key: string]: Mutation;
 }
 
-type Mutation = (state: State, payload?: any) => Promise<void> | void;
+type Mutation = (state: State, payload?: unknown) => Promise<void> | void;
 
 interface Middlewares {
   [key: string]: Middleware;
 }
 
-type Middleware = (context: MiddlewareContext) => Promise<any> | any;
+type Middleware = (context: MiddlewareContext) => Promise<unknown> | unknown;
 interface MiddlewareContext {
   actionName: string;
-  payload?: any;
+  payload?: unknown;
 }
 
 type ListenerCallbackFunction = (state: State) => void;
@@ -38,13 +38,19 @@ interface Listener {
   callback: ListenerCallbackFunction;
 }
 
+function callListenerCallbacks(listener: Map<number, ListenerCallbackFunction>, newState: State) {
+  listener.forEach(callback => {
+    callback(newState);
+  });
+}
+
 class ReStore {
   private state: State;
   private actions: Actions;
   private mutations: Mutations;
   private middlewares: Middlewares;
   private nextListenerId: number;
-  private watchedStatesMap: Map<keyof State, Map<number, ListenerCallbackFunction>>;
+  private watchedStatesMap = new Map<keyof State | 'watchAll', Map<number, ListenerCallbackFunction>>();
 
   constructor(options: StoreOptions) {
     const { state, actions = {}, mutations = {}, middlewares = {} } = options;
@@ -53,7 +59,7 @@ class ReStore {
     this.mutations = mutations;
     this.middlewares = middlewares;
     this.nextListenerId = 1;
-    this.watchedStatesMap = new Map<keyof State, Map<number, ListenerCallbackFunction>>();
+    this.watchedStatesMap = new Map<keyof State | 'watchAll', Map<number, ListenerCallbackFunction>>();
   }
 
   public getState(): State {
@@ -69,17 +75,19 @@ class ReStore {
   public subscribe(listener: Listener): number {
     const listenerId = this.nextListenerId++;
 
-    if(!listener.watchedStates || listener.watchedStates.size == 0) {
-      if(this.watchedStatesMap.has('watchAll')){
-        this.watchedStatesMap.get('watchAll')?.set(listenerId, listener.callback)
-      }else {
-        this.watchedStatesMap.set('watchAll', new Map().set(listenerId, listener.callback))
+    if (!listener.watchedStates || listener.watchedStates.size == 0) {
+      const watchAllListeners = this.watchedStatesMap.get('watchAll');
+      if (watchAllListeners) {
+        watchAllListeners.set(listenerId, listener.callback);
+      } else {
+        this.watchedStatesMap.set('watchAll', new Map().set(listenerId, listener.callback));
       }
     }
 
-    listener.watchedStates.forEach((stateKey) => {
-      if (this.watchedStatesMap.has(stateKey)) {
-        this.watchedStatesMap.get(stateKey)?.set(listenerId, listener.callback) 
+    listener.watchedStates.forEach(stateKey => {
+      const watchedStateListeners = this.watchedStatesMap.get(stateKey);
+      if (watchedStateListeners) {
+        watchedStateListeners.set(listenerId, listener.callback);
       } else {
         this.watchedStatesMap.set(stateKey, new Map().set(listenerId, listener.callback));
       }
@@ -89,24 +97,25 @@ class ReStore {
   }
 
   public unsubscribe(listenerId: number): void {
-    this.watchedStatesMap.forEach((watchedState) => {
-      watchedState!.delete(listenerId)
-    })
+    this.watchedStatesMap.forEach(watchedState => {
+      watchedState!.delete(listenerId);
+    });
   }
 
   public notify(changedKeys?: Set<keyof State>): void {
     const newState = Object.assign({}, this.state);
     if (!changedKeys || changedKeys.size == 0) {
-      this.watchedStatesMap.forEach(state => state.forEach(callback => {
-        callback(newState)
-      }))
+      this.watchedStatesMap.forEach(listener =>
+        callListenerCallbacks(listener, newState)
+      );
       return;
     }
     changedKeys.forEach(changedKey => {
-      this.watchedStatesMap.get(changedKey)?.forEach(callback => {
-        callback(newState)
-      });
-      this.watchedStatesMap.get('watchAll')?.forEach(callback => callback(newState))
+      const watchedStateListeners = this.watchedStatesMap.get(changedKey)
+      watchedStateListeners && callListenerCallbacks(watchedStateListeners, newState);
+
+      const watchAllListeners = this.watchedStatesMap.get('watchAll')
+      watchAllListeners && callListenerCallbacks(watchAllListeners, newState)
     });
   }
 
@@ -133,7 +142,7 @@ class ReStore {
       return;
     }
 
-    const previousState = {...this.state};
+    const previousState = { ...this.state };
     await mutation(this.state, payload);
     const changedKeys = new Set<keyof State>();
     for (const key of Object.keys(previousState)) {

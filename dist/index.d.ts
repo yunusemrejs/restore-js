@@ -5,23 +5,23 @@ interface StoreOptions {
     middlewares?: Middlewares;
 }
 interface State {
-    [key: string]: any;
+    [key: string]: unknown;
 }
 interface Actions {
     [key: string]: Action;
 }
-type Action = (store: ReStore, payload?: any) => any;
+type Action = (store: ReStore, payload?: unknown) => unknown;
 interface Mutations {
     [key: string]: Mutation;
 }
-type Mutation = (state: State, payload?: any) => Promise<void> | void;
+type Mutation = (state: State, payload?: unknown) => Promise<void> | void;
 interface Middlewares {
     [key: string]: Middleware;
 }
-type Middleware = (context: MiddlewareContext) => Promise<any> | any;
+type Middleware = (context: MiddlewareContext) => Promise<unknown> | unknown;
 interface MiddlewareContext {
     actionName: string;
-    payload?: any;
+    payload?: unknown;
 }
 type ListenerCallbackFunction = (state: State) => void;
 interface Listener {
