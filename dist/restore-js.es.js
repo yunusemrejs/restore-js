@@ -62,9 +62,9 @@ class ReStore {
     changedKeys.forEach((changedKey) => {
       const watchedStateListeners = this.watchedStatesMap.get(changedKey);
       watchedStateListeners && callListenerCallbacks(watchedStateListeners, newState);
-      const watchAllListeners = this.watchedStatesMap.get("watchAll");
-      watchAllListeners && callListenerCallbacks(watchAllListeners, newState);
     });
+    const watchAllListeners = this.watchedStatesMap.get("watchAll");
+    watchAllListeners && callListenerCallbacks(watchAllListeners, newState);
   }
   async dispatch(actionName, payload) {
     const action = this.actions[actionName];
