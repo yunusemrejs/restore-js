@@ -67,7 +67,7 @@ class ReStore {
   }
 
   public setState(state: State): void {
-    const newState = Object.assign({}, state);
+    const newState = { ...state };
     this.state = newState;
     this.notify();
   }
@@ -95,7 +95,7 @@ class ReStore {
   }
 
   public notify(changedKeys?: Set<keyof State>): void {
-    const newState = Object.assign({}, this.state);
+    const newState = { ...this.state };
     if (!changedKeys || changedKeys.size == 0) {
       this.watchedStatesMap.forEach(listener =>
         callListenerCallbacks(listener, newState)
