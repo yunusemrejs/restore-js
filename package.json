@@ -3,7 +3,15 @@
 	"version": "1.1.4",
 	"description": "Lightweight and simple state management library for JavaScript applications",
 	"keywords": [
-		"state-management"
+		"state management",
+		"store",
+		"state",
+		"redux",
+		"vuex",
+		"functional",
+		"observer",
+		"flux",
+		"tiny"
 	],
 	"main": "./dist/restore-js.umd.js",
 	"types": "./dist/index.d.js",
