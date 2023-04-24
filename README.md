@@ -1,4 +1,6 @@
 # ReStore JS
+[![npm version](https://badge.fury.io/js/@yunusemrejs%2Frestore-js.svg)](https://badge.fury.io/js/@yunusemrejs%2Frestore-js)
+
 ReStore is a lightweight and simple state management library for JavaScript applications. It allows you to manage the state of your application and execute actions and mutations in a predictable and centralized way.
 
 [DEMO](https://yunusemrejs.github.io/restore-ecommerce-demo/)
