@@ -69,8 +69,7 @@ class ReStore {
   async dispatch(actionName, payload) {
     const action = this.actions[actionName];
     if (!action) {
-      console.error(`Action '${actionName}' not found.`);
-      return;
+      throw new Error(`Action '${actionName}' not found.`);
     }
     let processedPayload = payload;
     for (const key of Object.keys(this.middlewares)) {
@@ -84,8 +83,7 @@ class ReStore {
   async commit(mutationName, payload) {
     const mutation = this.mutations[mutationName];
     if (!mutation) {
-      console.error(`Mutation '${mutationName}' not found.`);
-      return;
+      throw new Error(`Mutation '${mutationName}' not found.`);
     }
     const previousState = { ...this.state };
     await mutation(this.state, payload);
