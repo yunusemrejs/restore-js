@@ -96,21 +96,21 @@ class ReStore {
 
   public notify(changedKeys?: Set<keyof State>): void {
     const newState = { ...this.state };
-    
-    if (!changedKeys || changedKeys.size == 0) {
-      this.watchedStatesMap.forEach(listener =>
-        callListenerCallbacks(listener, newState)
-      );
+
+    if (!changedKeys || changedKeys.size === 0) {
+      this.watchedStatesMap.forEach(listener => callListenerCallbacks(listener, newState));
       return;
     }
 
+    const affectedListeners = new Set<Map<number, ListenerCallbackFunction>>();
     changedKeys.forEach(changedKey => {
-      const watchedStateListeners = this.watchedStatesMap.get(changedKey)
-      watchedStateListeners && callListenerCallbacks(watchedStateListeners, newState);
+      const watchedStateListeners = this.watchedStatesMap.get(changedKey);
+      watchedStateListeners && affectedListeners.add(watchedStateListeners);
     });
 
-    const watchAllListeners = this.watchedStatesMap.get('watchAll')
-    watchAllListeners && callListenerCallbacks(watchAllListeners, newState)
+    affectedListeners.forEach(listener => {
+      callListenerCallbacks(listener, newState);
+    });
   }
 
   public async dispatch(actionName: string, payload?: any): Promise<any> {

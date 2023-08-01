@@ -53,18 +53,18 @@ class ReStore {
   }
   notify(changedKeys) {
     const newState = { ...this.state };
-    if (!changedKeys || changedKeys.size == 0) {
-      this.watchedStatesMap.forEach(
-        (listener) => callListenerCallbacks(listener, newState)
-      );
+    if (!changedKeys || changedKeys.size === 0) {
+      this.watchedStatesMap.forEach((listener) => callListenerCallbacks(listener, newState));
       return;
     }
+    const affectedListeners = /* @__PURE__ */ new Set();
     changedKeys.forEach((changedKey) => {
       const watchedStateListeners = this.watchedStatesMap.get(changedKey);
-      watchedStateListeners && callListenerCallbacks(watchedStateListeners, newState);
+      watchedStateListeners && affectedListeners.add(watchedStateListeners);
     });
-    const watchAllListeners = this.watchedStatesMap.get("watchAll");
-    watchAllListeners && callListenerCallbacks(watchAllListeners, newState);
+    affectedListeners.forEach((listener) => {
+      callListenerCallbacks(listener, newState);
+    });
   }
   async dispatch(actionName, payload) {
     const action = this.actions[actionName];
