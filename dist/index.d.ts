@@ -10,39 +10,61 @@ interface State {
 interface Actions {
     [key: string]: Action;
 }
-type Action = (store: ReStore, payload?: unknown) => unknown;
+type Action = (store: ReStore, payload?: any) => any;
 interface Mutations {
     [key: string]: Mutation;
 }
-type Mutation = (state: State, payload?: unknown) => Promise<void> | void;
+type Mutation = (state: State, payload?: any) => Promise<void> | void;
 interface Middlewares {
     [key: string]: Middleware;
 }
-type Middleware = (context: MiddlewareContext) => Promise<unknown> | unknown;
+type Middleware = (context: MiddlewareContext) => Promise<any> | any;
 interface MiddlewareContext {
     actionName: string;
-    payload?: unknown;
+    payload?: any;
 }
 type ListenerCallbackFunction = (state: State) => void;
+type WatchedStateKey = keyof State | 'watchAll';
 interface Listener {
-    watchedStates: Set<keyof State>;
+    watchedStates: Set<WatchedStateKey>;
     callback: ListenerCallbackFunction;
 }
 declare class ReStore {
     private state;
-    private actions;
-    private mutations;
-    private middlewares;
+    private readonly stateKeys;
+    private readonly stateKeyToIndex;
+    private readonly dirtyFlags;
+    private readonly metadata;
+    private readonly actions;
+    private readonly mutations;
+    private readonly middlewares;
+    private readonly middlewareNames;
+    private readonly actionCache;
+    private readonly mutationCache;
     private nextListenerId;
-    private watchedStatesMap;
+    private readonly listenerBuckets;
+    private readonly listenerRegistrations;
+    private readonly listenerNodePool;
+    private pendingFlushPromise;
+    private resolvePendingFlush;
+    private readonly mutationSnapshot;
     constructor(options: StoreOptions);
     getState(): State;
-    setState(state: State): void;
+    setState(nextState: State): void;
     subscribe(listener: Listener): number;
     unsubscribe(listenerId: number): void;
-    notify(changedKeys?: Set<keyof State>): void;
     dispatch(actionName: string, payload?: any): Promise<any>;
     commit(mutationName: string, payload?: any): Promise<void>;
+    private getAction;
+    private getMutation;
+    private scheduleFlush;
+    private flushNotifications;
+    private notifyWatchAll;
+    private notifyBucket;
+    private resolveFlushPromise;
+    private assertStateShape;
+    private acquireNode;
+    private detachNode;
 }
 declare function createStore(options: StoreOptions): ReStore;
 export { ReStore, createStore };
