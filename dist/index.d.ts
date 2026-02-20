@@ -46,7 +46,6 @@ declare class ReStore {
     private listenerNodeHeadById;
     private listenerEpochById;
     private epochCounter;
-    private readonly previousStateValues;
     private isFlushScheduled;
     private pendingFlushPromise;
     private resolveFlushPromise;

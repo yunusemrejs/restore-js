@@ -25,7 +25,6 @@ class ReStore {
     __publicField(this, "listenerNodeHeadById");
     __publicField(this, "listenerEpochById");
     __publicField(this, "epochCounter");
-    __publicField(this, "previousStateValues");
     __publicField(this, "isFlushScheduled");
     __publicField(this, "pendingFlushPromise");
     __publicField(this, "resolveFlushPromise");
@@ -54,7 +53,6 @@ class ReStore {
     this.listenerNodeHeadById.fill(-1);
     this.listenerEpochById = new Uint32Array(32);
     this.epochCounter = 1;
-    this.previousStateValues = new Array(this.stateKeys.length);
     this.isFlushScheduled = 0;
     this.pendingFlushPromise = null;
     this.resolveFlushPromise = null;
@@ -131,9 +129,10 @@ class ReStore {
     if (!mutation) {
       throw new Error(`Mutation '${mutationName}' not found.`);
     }
+    const previousStateValues = new Array(this.stateKeys.length);
     for (let i = 0; i < this.stateKeys.length; i += 1) {
       const key = this.stateKeys[i];
-      this.previousStateValues[i] = this.state[key];
+      previousStateValues[i] = this.state[key];
     }
     const mutationResult = mutation(this.state, payload);
     if (mutationResult && typeof mutationResult.then === "function") {
@@ -142,7 +141,7 @@ class ReStore {
     let changedCount = 0;
     for (let i = 0; i < this.stateKeys.length; i += 1) {
       const key = this.stateKeys[i];
-      if (this.previousStateValues[i] !== this.state[key]) {
+      if (previousStateValues[i] !== this.state[key]) {
         this.changedKeyWords[i >>> 5] |= 1 << (i & 31);
         changedCount += 1;
       }
@@ -206,12 +205,11 @@ class ReStore {
     let cursor = nodeIndex;
     while (cursor !== -1) {
       const node = this.subscriptionNodes[cursor];
-      const nextCursor = node.next;
       if (node.active === 1 && this.listenerEpochById[node.listenerId] !== epoch) {
         this.listenerEpochById[node.listenerId] = epoch;
         node.callback(this.state);
       }
-      cursor = nextCursor;
+      cursor = node.active === 1 ? node.next : this.listHead[node.listIndex];
     }
   }
   attachNode(listenerId, listIndex, callback) {

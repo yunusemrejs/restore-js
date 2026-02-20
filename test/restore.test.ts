@@ -147,6 +147,68 @@ describe('ReStore', () => {
     expect(listener2).toHaveBeenCalledTimes(1);
   });
 
+
+
+  it('should keep commit snapshots isolated across concurrent commits', async () => {
+    store = createStore({
+      state: { count: 0 },
+      actions: {},
+      mutations: {
+        async delayedIncrement(state) {
+          await Promise.resolve();
+          state.count = (state.count as number) + 1;
+        },
+        noop() {
+          return;
+        }
+      }
+    });
+
+    const listener = jest.fn();
+    store.subscribe({
+      watchedStates: new Set(['count']),
+      callback: listener
+    });
+
+    await Promise.all([store.commit('delayedIncrement'), store.commit('noop')]);
+
+    expect(store.getState().count).toBe(1);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('should continue notifying remaining listeners when one unsubscribes another', async () => {
+    const calls: string[] = [];
+    let secondListenerId = 0;
+
+    const firstListenerId = store.subscribe({
+      watchedStates: new Set(['count']),
+      callback: () => {
+        calls.push('first');
+        store.unsubscribe(secondListenerId);
+      }
+    });
+
+    secondListenerId = store.subscribe({
+      watchedStates: new Set(['count']),
+      callback: () => {
+        calls.push('second');
+      }
+    });
+
+    store.subscribe({
+      watchedStates: new Set(['count']),
+      callback: () => {
+        calls.push('third');
+      }
+    });
+
+    await store.commit('increment', 1);
+
+    expect(calls).toEqual(['first', 'third']);
+
+    store.unsubscribe(firstListenerId);
+  });
+
   it('should isolate middleware context across concurrent dispatch calls', async () => {
     const seenPayloads: unknown[] = [];
 

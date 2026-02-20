@@ -75,7 +75,6 @@ class ReStore {
   private listenerNodeHeadById: Int32Array;
   private listenerEpochById: Uint32Array;
   private epochCounter: number;
-  private readonly previousStateValues: unknown[];
 
   private isFlushScheduled: number;
   private pendingFlushPromise: Promise<void> | null;
@@ -114,7 +113,6 @@ class ReStore {
     this.listenerNodeHeadById.fill(-1);
     this.listenerEpochById = new Uint32Array(32);
     this.epochCounter = 1;
-    this.previousStateValues = new Array<unknown>(this.stateKeys.length);
 
     this.isFlushScheduled = 0;
     this.pendingFlushPromise = null;
@@ -210,9 +208,10 @@ class ReStore {
       throw new Error(`Mutation '${mutationName}' not found.`);
     }
 
+    const previousStateValues = new Array<unknown>(this.stateKeys.length);
     for (let i = 0; i < this.stateKeys.length; i += 1) {
       const key = this.stateKeys[i];
-      this.previousStateValues[i] = this.state[key];
+      previousStateValues[i] = this.state[key];
     }
 
     const mutationResult = mutation(this.state, payload);
@@ -223,7 +222,7 @@ class ReStore {
     let changedCount = 0;
     for (let i = 0; i < this.stateKeys.length; i += 1) {
       const key = this.stateKeys[i];
-      if (this.previousStateValues[i] !== this.state[key]) {
+      if (previousStateValues[i] !== this.state[key]) {
         this.changedKeyWords[i >>> 5] |= 1 << (i & 31);
         changedCount += 1;
       }
@@ -299,12 +298,11 @@ class ReStore {
 
     while (cursor !== -1) {
       const node = this.subscriptionNodes[cursor];
-      const nextCursor = node.next;
       if (node.active === 1 && this.listenerEpochById[node.listenerId] !== epoch) {
         this.listenerEpochById[node.listenerId] = epoch;
         node.callback(this.state);
       }
-      cursor = nextCursor;
+      cursor = node.active === 1 ? node.next : this.listHead[node.listIndex];
     }
   }
 
