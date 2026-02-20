@@ -25,24 +25,53 @@ interface MiddlewareContext {
 }
 type ListenerCallbackFunction = (state: State) => void;
 interface Listener {
-    watchedStates: Set<keyof State>;
+    watchedStates: Set<keyof State | 'watchAll'>;
     callback: ListenerCallbackFunction;
 }
 declare class ReStore {
     private state;
-    private actions;
-    private mutations;
-    private middlewares;
+    private readonly actions;
+    private readonly mutations;
+    private readonly middlewares;
+    private readonly middlewareKeys;
+    private readonly stateKeys;
+    private readonly stateKeyIndex;
     private nextListenerId;
-    private watchedStatesMap;
+    private readonly listHead;
+    private readonly listTail;
+    private readonly changedKeyWords;
+    private subscriptionNodes;
+    private freeNodeHead;
+    private nodeCount;
+    private listenerNodeHeadById;
+    private listenerEpochById;
+    private epochCounter;
+    private readonly previousStateValues;
+    private isFlushScheduled;
+    private readonly dispatchContext;
+    private pendingFlushPromise;
+    private resolveFlushPromise;
     constructor(options: StoreOptions);
     getState(): State;
     setState(state: State): void;
     subscribe(listener: Listener): number;
     unsubscribe(listenerId: number): void;
     notify(changedKeys?: Set<keyof State>): void;
-    dispatch(actionName: string, payload?: any): Promise<any>;
-    commit(mutationName: string, payload?: any): Promise<void>;
+    dispatch(actionName: string, payload?: unknown): Promise<unknown>;
+    commit(mutationName: string, payload?: unknown): Promise<void>;
+    private createShapedState;
+    private markAllChanged;
+    private scheduleFlush;
+    private flushNotifications;
+    private notifyList;
+    private attachNode;
+    private detachNode;
+    private allocateNode;
+    private releaseNode;
+    private ensureListenerCapacity;
+    private nextEpoch;
+    private getWatchAllListIndex;
+    private getListIndex;
 }
 declare function createStore(options: StoreOptions): ReStore;
 export { ReStore, createStore };

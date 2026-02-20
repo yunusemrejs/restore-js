@@ -16,7 +16,7 @@ describe('ReStore', () => {
       },
       mutations: {
         increment(state, payload) {
-          state.count += payload;
+          state.count = (state.count as number) + (payload as number);
         }
       }
     };
@@ -90,7 +90,7 @@ describe('ReStore', () => {
       },
       mutations: {
         increment(state, payload) {
-          state.count += payload;
+          state.count = (state.count as number) + (payload as number);
         }
       }
     };
@@ -126,7 +126,7 @@ describe('ReStore', () => {
       },
       mutations: {
         increment(state, payload) {
-          state.count += payload;
+          state.count = (state.count as number) + (payload as number);
         }
       }
     };
@@ -147,5 +147,4 @@ describe('ReStore', () => {
     expect(listener2).toHaveBeenCalledTimes(1);
   });
 });
-
 
