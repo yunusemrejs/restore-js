@@ -5,37 +5,65 @@ interface StoreOptions {
     middlewares?: Middlewares;
 }
 interface State {
-    [key: string]: unknown;
+    [key: string]: any;
 }
 interface Actions {
     [key: string]: Action;
 }
-type Action = (store: ReStore, payload?: unknown) => unknown;
+type Action = (store: ReStore, payload?: any) => unknown;
 interface Mutations {
     [key: string]: Mutation;
 }
-type Mutation = (state: State, payload?: unknown) => Promise<void> | void;
+type Mutation = (state: State, payload?: any) => Promise<void> | void;
 interface Middlewares {
     [key: string]: Middleware;
 }
-type Middleware = (context: MiddlewareContext) => Promise<unknown> | unknown;
+type Middleware = (context: MiddlewareContext) => Promise<any> | any;
 interface MiddlewareContext {
     actionName: string;
-    payload?: unknown;
+    payload?: any;
 }
 type ListenerCallbackFunction = (state: State) => void;
 interface Listener {
-    watchedStates: Set<keyof State>;
+    watchedStates: Set<keyof State | 'watchAll'>;
     callback: ListenerCallbackFunction;
 }
 declare class ReStore {
-    private state;
-    private actions;
-    private mutations;
-    private middlewares;
+    private readonly state;
+    private readonly stateProxy;
+    private readonly actions;
+    private readonly mutations;
+    private readonly middlewares;
+    private readonly middlewareKeys;
+    private readonly middlewareContext;
+    private readonly stateKeys;
+    private readonly stateKeyIndex;
+    private readonly bucketKeyIndex;
+    private readonly listenerBuckets;
+    private readonly subscriptionMap;
+    private readonly freeNodePool;
+    private readonly bitset;
+    private readonly counters;
     private nextListenerId;
-    private watchedStatesMap;
+    private notifyEpoch;
+    private notifyMarks;
+    private pendingFlush;
+    private flushPromise;
+    private resolveFlush;
+    private pendingCommit;
     constructor(options: StoreOptions);
+    private createStateProxy;
+    private ensureNotifyMarkCapacity;
+    private markDirty;
+    private resetDirty;
+    private appendNode;
+    private removeNode;
+    private getOrCreateBucketIndex;
+    private getNode;
+    private invokeNode;
+    private flushBucket;
+    private flushNotifications;
+    private scheduleFlush;
     getState(): State;
     setState(state: State): void;
     subscribe(listener: Listener): number;
