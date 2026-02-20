@@ -48,7 +48,6 @@ declare class ReStore {
     private epochCounter;
     private readonly previousStateValues;
     private isFlushScheduled;
-    private readonly dispatchContext;
     private pendingFlushPromise;
     private resolveFlushPromise;
     constructor(options: StoreOptions);

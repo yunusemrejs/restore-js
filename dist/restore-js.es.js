@@ -27,7 +27,6 @@ class ReStore {
     __publicField(this, "epochCounter");
     __publicField(this, "previousStateValues");
     __publicField(this, "isFlushScheduled");
-    __publicField(this, "dispatchContext");
     __publicField(this, "pendingFlushPromise");
     __publicField(this, "resolveFlushPromise");
     const { state, actions = EMPTY_STATE, mutations = EMPTY_STATE, middlewares = EMPTY_STATE } = options;
@@ -59,7 +58,6 @@ class ReStore {
     this.isFlushScheduled = 0;
     this.pendingFlushPromise = null;
     this.resolveFlushPromise = null;
-    this.dispatchContext = { actionName: "", payload: void 0 };
   }
   getState() {
     return this.state;
@@ -115,8 +113,7 @@ class ReStore {
       throw new Error(`Action '${actionName}' not found.`);
     }
     let processedPayload = payload;
-    const context = this.dispatchContext;
-    context.actionName = actionName;
+    const context = { actionName, payload: processedPayload };
     for (let i = 0; i < this.middlewareKeys.length; i += 1) {
       const key = this.middlewareKeys[i];
       const middleware = this.middlewares[key];

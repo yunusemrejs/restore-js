@@ -78,7 +78,6 @@ class ReStore {
   private readonly previousStateValues: unknown[];
 
   private isFlushScheduled: number;
-  private readonly dispatchContext: MiddlewareContext;
   private pendingFlushPromise: Promise<void> | null;
   private resolveFlushPromise: (() => void) | null;
 
@@ -121,7 +120,6 @@ class ReStore {
     this.pendingFlushPromise = null;
     this.resolveFlushPromise = null;
 
-    this.dispatchContext = { actionName: '', payload: undefined };
   }
 
   public getState(): State {
@@ -190,8 +188,7 @@ class ReStore {
     }
 
     let processedPayload = payload;
-    const context = this.dispatchContext;
-    context.actionName = actionName;
+    const context: MiddlewareContext = { actionName, payload: processedPayload };
 
     for (let i = 0; i < this.middlewareKeys.length; i += 1) {
       const key = this.middlewareKeys[i];

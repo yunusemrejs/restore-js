@@ -146,5 +146,35 @@ describe('ReStore', () => {
     expect(listener1).toHaveBeenCalledTimes(1);
     expect(listener2).toHaveBeenCalledTimes(1);
   });
-});
 
+  it('should isolate middleware context across concurrent dispatch calls', async () => {
+    const seenPayloads: unknown[] = [];
+
+    store = createStore({
+      state: { count: 0, message: 'Hello, world!' },
+      actions: {
+        passthrough(_store, payload) {
+          return payload;
+        }
+      },
+      middlewares: {
+        async capture(context) {
+          await Promise.resolve();
+          seenPayloads.push(context.payload);
+          return context.payload;
+        }
+      },
+      mutations: {}
+    });
+
+    const [firstResult, secondResult] = await Promise.all([
+      store.dispatch('passthrough', 'first'),
+      store.dispatch('passthrough', 'second')
+    ]);
+
+    expect(firstResult).toBe('first');
+    expect(secondResult).toBe('second');
+    expect(seenPayloads).toHaveLength(2);
+    expect(new Set(seenPayloads)).toEqual(new Set(['first', 'second']));
+  });
+});
